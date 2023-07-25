@@ -1,3 +1,9 @@
+package org.example;
+
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,14 +12,15 @@ import java.net.URL;
 
 public class Main {
     private static final String API_URL = "https://samples.openweathermap.org/data/2.5/forecast/hourly?q=London,us&appid=b6907d289e10d714a6e88b30761fae22";
-    private static String jsonData;
-    private static String jsObject;
+    private static JSONObject jsonData;
+    private static JSONArray jsonArray;
     public static void main(String[] args) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        try {
-             jsonData = getWeatherDataFromAPI();
 
-            //System.out.println(jsonData);
+        try {
+            jsonData = getWeatherDataFromAPI();
+            jsonArray=jsonData.getJSONArray("list");
+
             if (jsonData == null) {
                 System.out.println("Error fetching weather data.");
                 return;
@@ -36,8 +43,8 @@ public class Main {
                     case "1":
                         System.out.print("Enter the date (YYYY-MM-DD HH:MM:SS): ");
                         String date = br.readLine();
-                        double temp = getTemperature(jsonData, date);
-                        if (temp != -1) {
+                        String temp = getTemperature(date);
+                        if (temp != null) {
                             System.out.println("Temperature at " + date + ": " + temp + " K");
                         } else {
                             System.out.println("No data available for the given date.");
@@ -46,8 +53,8 @@ public class Main {
                     case "2":
                         System.out.print("Enter the date (YYYY-MM-DD HH:MM:SS): ");
                         date = br.readLine();
-                        double windSpeed = getWindSpeed(jsonData, date);
-                        if (windSpeed != -1) {
+                        String windSpeed = getWindSpeed(date);
+                        if (windSpeed != null) {
                             System.out.println("Wind Speed at " + date + ": " + windSpeed + " m/s");
                         } else {
                             System.out.println("No data available for the given date.");
@@ -56,8 +63,8 @@ public class Main {
                     case "3":
                         System.out.print("Enter the date (YYYY-MM-DD HH:MM:SS): ");
                         date = br.readLine();
-                        double pressure = getPressure(jsonData, date);
-                        if (pressure != -1) {
+                        String pressure = getPressure(date);
+                        if (pressure != null) {
                             System.out.println("Pressure at " + date + ": " + pressure + " hPa");
                         } else {
                             System.out.println("No data available for the given date.");
@@ -73,7 +80,7 @@ public class Main {
         }
     }
 
-    private static String getWeatherDataFromAPI() throws IOException {
+    private static JSONObject getWeatherDataFromAPI() throws IOException {
         URL url = new URL(API_URL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -86,46 +93,57 @@ public class Main {
                 response.append(line);
             }
             br.close();
-            return response.toString();
+            return new JSONObject(response.toString());
         } else {
             return null;
         }
     }
-    private static JsonObject getWeatherDataFromAPI() throws IOException {
-        URL url = new URL(API_URL);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
 
-        if (conn.getResponseCode() == 200) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            JsonParser parser = new JsonParser();
-            JsonElement rootElement = parser.parse(br);
-            return rootElement.getAsJsonObject();
-        } else {
+    private static String getTemperature(String date) {
+        try{
+            for(Object jsonObject:jsonArray){
+                JSONObject jsonObject1= (JSONObject) jsonObject;
+                if(jsonObject1.get("dt_txt").toString().compareTo(date)==0){
+                    JSONObject response= (JSONObject) jsonObject1.get("main");
+                    String s=String.valueOf(response.get("temp"));
+                    return s;
+                }
+            }return null;
+        }catch(Exception e){
             return null;
         }
     }
-    private static double getTemperature(String jsonData, String date) {
-        // Parse the JSON data and extract the temperature for the given date
-        // Implement the parsing logic here based on the JSON structure
-        // Return the temperature value or -1 if not found
-        // For simplicity, I'm returning -1 here
-        return -1;
+
+    private static String getWindSpeed(String date) {
+        System.out.println(date);
+        try{
+            for(Object jsonObject:jsonArray){
+                JSONObject jsonObject1= (JSONObject) jsonObject;
+                if(jsonObject1.get("dt_txt").toString().compareTo(date)==0){
+                    JSONObject wind= (JSONObject) jsonObject1.get("wind");
+                    String s=String.valueOf(wind.get("speed"));
+                    return s;
+                }
+            }
+            return null;
+        }catch(Exception e){
+            return null;
+        }
+
     }
 
-    private static double getWindSpeed(String jsonData, String date) {
-        // Parse the JSON data and extract the wind speed for the given date
-        // Implement the parsing logic here based on the JSON structure
-        // Return the wind speed value or -1 if not found
-        // For simplicity, I'm returning -1 here
-        return -1;
-    }
-
-    private static double getPressure(String jsonData, String date) {
-        // Parse the JSON data and extract the pressure for the given date
-        // Implement the parsing logic here based on the JSON structure
-        // Return the pressure value or -1 if not found
-        // For simplicity, I'm returning -1 here
-        return -1;
+    private static String getPressure(String date) {
+        try{
+            for(Object jsonObject:jsonArray){
+                JSONObject jsonObject1= (JSONObject) jsonObject;
+                if(jsonObject1.get("dt_txt").toString().compareTo(date)==0){
+                    JSONObject response= (JSONObject) jsonObject1.get("main");
+                    String s=String.valueOf(response.get("pressure"));
+                    return s;
+                }
+            }return null;
+        }catch(Exception e){
+            return null;
+        }
     }
 }
